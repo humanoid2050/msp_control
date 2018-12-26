@@ -1,4 +1,4 @@
-//#include "uav_control/basic_msgs_interface.hpp"
+//#include "msp_control/basic_msgs_interface.hpp"
 
 #include "ros/ros.h"
 
@@ -18,12 +18,12 @@
 #include "utilities/platform_control.h"
 #include "utilities/Float64Stamped.h"
 #include "utilities/BoolStamped.h"
-#include "uav_control/FlightMode.h"
+#include "msp_control/FlightMode.h"
 
 #include <iostream>
 #include <math.h>
 
-using uav_control::FlightMode;
+using msp_control::FlightMode;
 using utilities::platform_control;
 
 class App {

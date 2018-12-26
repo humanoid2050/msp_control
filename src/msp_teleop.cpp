@@ -4,7 +4,7 @@
 #include "sensor_msgs/Joy.h"
 #include "utilities/platform_control.h"
 #include "utilities/BoolStamped.h"
-#include "uav_control/FlightMode.h"
+#include "msp_control/FlightMode.h"
 
 class Teleop
 {
@@ -34,21 +34,21 @@ public:
         command_pub_.publish(control);
         
         //configure flight mode (ANGLE/NAV_HOLD/RTH, ALT_HOLD, ARM)
-        uav_control::FlightMode flight_mode;
+        msp_control::FlightMode flight_mode;
         switch ( mode_) {
         case ANGLE:
-            flight_mode.primary_mode = uav_control::FlightMode::ANGLE;
+            flight_mode.primary_mode = msp_control::FlightMode::ANGLE;
             break;
         case NAV_HOLD:
-            flight_mode.primary_mode = uav_control::FlightMode::NAV_ALTHOLD;
+            flight_mode.primary_mode = msp_control::FlightMode::NAV_ALTHOLD;
             break;
         case RTH:
-            flight_mode.primary_mode = uav_control::FlightMode::NAV_RTH;
+            flight_mode.primary_mode = msp_control::FlightMode::NAV_RTH;
             break;
         }
         
-        if (hold_altitude_) flight_mode.secondary_mode = uav_control::FlightMode::NAV_ALTHOLD;
-        if (activate_) flight_mode.modifier = uav_control::FlightMode::ARM;
+        if (hold_altitude_) flight_mode.secondary_mode = msp_control::FlightMode::NAV_ALTHOLD;
+        if (activate_) flight_mode.modifier = msp_control::FlightMode::ARM;
         flight_mode_pub_.publish(flight_mode);
         
         //if activated, set MSP control source (else SBUS)
