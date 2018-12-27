@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   utilities
   message_generation
+  tf2
 )
 
 ## System dependencies are found with CMake's conventions
@@ -108,7 +109,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES uav_control
-  CATKIN_DEPENDS msp roscpp sensor_msgs std_msgs utilities message_runtime
+  CATKIN_DEPENDS msp roscpp std_msgs sensor_msgs utilities message_runtime tf2
 #  DEPENDS system_lib
 )
 

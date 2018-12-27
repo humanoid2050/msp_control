@@ -13,7 +13,6 @@
 #include <sensor_msgs/NavSatFix.h>
 
 #include <tf2/LinearMath/Quaternion.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include "utilities/platform_control.h"
 #include "utilities/Float64Stamped.h"
@@ -61,7 +60,12 @@ public:
         
         sensor_msgs::Imu imu;
         imu.header = std_msgs::Header();
-        imu.orientation = tf2::toMsg(orientation_);
+        
+        imu.orientation.w = orientation_.getW();
+        imu.orientation.x = orientation_.getX();
+        imu.orientation.y = orientation_.getY();
+        imu.orientation.z = orientation_.getZ();
+        
         imu.angular_velocity.x = imu_scaled.gyro[0]();
         imu.angular_velocity.y = imu_scaled.gyro[1]();
         imu.angular_velocity.z = imu_scaled.gyro[2]();
