@@ -45,8 +45,8 @@ public:
     {
         imu_pub = node_.advertise<sensor_msgs::Imu>("imu", 10);
         mag_pub = node_.advertise<sensor_msgs::MagneticField>("mag", 10);
-        alt_pub = node_.advertise<sensor_msgs::MagneticField>("altitude", 10);
-        nav_pub = node_.advertise<sensor_msgs::MagneticField>("nav", 10);
+        alt_pub = node_.advertise<utilities::Float64Stamped>("altitude", 10);
+        nav_pub = node_.advertise<sensor_msgs::NavSatFix>("nav", 10);
     }
 
     void onStatus(msp::msg::Status& status) {
