@@ -205,7 +205,7 @@ private:
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "teleop_node");
+    ros::init(argc, argv, "msp_control_node");
     ros::NodeHandle n;
     
     
