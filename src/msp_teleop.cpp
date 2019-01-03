@@ -13,28 +13,13 @@ class Teleop
 public:
     enum MODE {ANGLE, NAV_HOLD, RTH};
     
-    Teleop() : activate_(false), arm_(false), hold_altitude_(false), mode_(ANGLE)
+    Teleop() : arm_(false), hold_altitude_(false), mode_(ANGLE)
     {}
     
     void interpretJoystick(const sensor_msgs::Joy& joyMsg)
     {
         
-        if (joyMsg.buttons[activate_channel_]) { activate_ = true; }
-        if (joyMsg.buttons[deactivate_channel_]) { activate_ = false; }
-        
-        std::cout << arm_channel_ << " " << disarm_channel_ << " " << alt_hold_channel_ << " " << no_alt_hold_channel_ << std::endl;
-        std::cout << joyMsg.buttons[arm_channel_] << " " << joyMsg.buttons[disarm_channel_] << " " << joyMsg.buttons[alt_hold_channel_] << " " << joyMsg.buttons[no_alt_hold_channel_] << std::endl;
-        if (joyMsg.buttons[arm_channel_]) { arm_ = true; }
-        if (joyMsg.buttons[disarm_channel_]) { arm_ = false; }
-        if (joyMsg.buttons[alt_hold_channel_]) { hold_altitude_ = true; }
-        if (joyMsg.buttons[no_alt_hold_channel_]) { hold_altitude_ = false; }
-        
-        std::cout << rth_channel_ << " " << nav_hold_channel_ << " " << angle_channel_ << std::endl;
-        std::cout << joyMsg.buttons[rth_channel_] << " " << joyMsg.buttons[nav_hold_channel_] << " " << joyMsg.buttons[angle_channel_] << std::endl;
-        if (joyMsg.buttons[rth_channel_]) { mode_ = RTH; }
-        if (joyMsg.buttons[nav_hold_channel_]) { mode_ = NAV_HOLD; }
-        if (joyMsg.buttons[angle_channel_]) { mode_ = ANGLE; }
-        
+        //send control message every iteration
         utilities::platform_control control;
         control.header = std_msgs::Header();
         control.commandType = utilities::platform_control::TYPE_QUAD_SIMPLE;
@@ -44,30 +29,55 @@ public:
         control.value[3] = invert_yaw_ ? -joyMsg.axes[yaw_channel_] : joyMsg.axes[yaw_channel_]; // yaw / z rotation
         command_pub_.publish(control);
         
-        //configure flight mode (ANGLE/NAV_HOLD/RTH, ALT_HOLD, ARM)
-        msp_control::FlightMode flight_mode;
-        flight_mode.header = std_msgs::Header();
-        switch ( mode_) {
-        case ANGLE:
-            flight_mode.primary_mode = msp_control::FlightMode::ANGLE;
-            break;
-        case NAV_HOLD:
-            flight_mode.primary_mode = msp_control::FlightMode::NAV_POSHOLD;
-            break;
-        case RTH:
-            flight_mode.primary_mode = msp_control::FlightMode::NAV_RTH;
-            break;
+        
+        //send flight mode if a button is pushed
+        if (joyMsg.buttons[arm_channel_] || joyMsg.buttons[disarm_channel_] || joyMsg.buttons[alt_hold_channel_] || joyMsg.buttons[no_alt_hold_channel_] ||
+            joyMsg.buttons[rth_channel_] || joyMsg.buttons[nav_hold_channel_] || joyMsg.buttons[angle_channel_])
+        {
+            //accumulate state since some has to be replicated 
+            if (joyMsg.buttons[arm_channel_]) { arm_ = true; }
+            if (joyMsg.buttons[disarm_channel_]) { arm_ = false; }
+            if (joyMsg.buttons[alt_hold_channel_]) { hold_altitude_ = true; }
+            if (joyMsg.buttons[no_alt_hold_channel_]) { hold_altitude_ = false; }
+            
+            if (joyMsg.buttons[rth_channel_]) { mode_ = RTH; }
+            if (joyMsg.buttons[nav_hold_channel_]) { mode_ = NAV_HOLD; }
+            if (joyMsg.buttons[angle_channel_]) { mode_ = ANGLE; }
+            
+            //configure flight mode (ANGLE/NAV_HOLD/RTH, ALT_HOLD, ARM)
+            msp_control::FlightMode flight_mode;
+            flight_mode.header = std_msgs::Header();
+            switch ( mode_) {
+            case ANGLE:
+                flight_mode.primary_mode = msp_control::FlightMode::ANGLE;
+                break;
+            case NAV_HOLD:
+                flight_mode.primary_mode = msp_control::FlightMode::NAV_POSHOLD;
+                break;
+            case RTH:
+                flight_mode.primary_mode = msp_control::FlightMode::NAV_RTH;
+                break;
+            }
+            if (hold_altitude_) flight_mode.secondary_mode |= msp_control::FlightMode::NAV_ALTHOLD;
+            if (arm_) flight_mode.modifier |= msp_control::FlightMode::ARM;
+            flight_mode_pub_.publish(flight_mode);
+            
         }
         
-        if (hold_altitude_) flight_mode.secondary_mode = msp_control::FlightMode::NAV_ALTHOLD;
-        if (arm_) flight_mode.modifier = msp_control::FlightMode::ARM;
-        flight_mode_pub_.publish(flight_mode);
         
-        //if activated, set MSP control source (else SBUS)
-        utilities::BoolStamped msp_control;
-        msp_control.header = std_msgs::Header();
-        msp_control.value = activate_;
-        control_source_pub_.publish(msp_control);
+        if (joyMsg.buttons[activate_channel_]) { 
+            utilities::BoolStamped msp_control;
+            msp_control.header = std_msgs::Header();
+            msp_control.value = true;
+            control_source_pub_.publish(msp_control);
+        }
+        if (joyMsg.buttons[deactivate_channel_]) { 
+            utilities::BoolStamped msp_control;
+            msp_control.header = std_msgs::Header();
+            msp_control.value = false;
+            control_source_pub_.publish(msp_control);
+        }
+        
         
     }
     
@@ -96,7 +106,7 @@ public:
     int rth_channel_;
     
     //status flags
-    bool activate_; // SBUS/MSP
+    //bool activate_; // SBUS/MSP
     bool arm_;
     bool hold_altitude_;
     MODE mode_;
