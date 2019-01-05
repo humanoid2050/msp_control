@@ -1,0 +1,6 @@
+<launch>
+  
+  <node name="msp_teleop_node" pkg="msp_control" type="msp_teleop" />
+  <node name="msp_control_node" pkg="msp_control" type="msp_control_node" />
+  
+</launch>
