@@ -147,7 +147,7 @@ int main(int argc, char **argv)
     
 	std::string serial_dev;
 
-    n.param<std::string>("serial_dev", serial_dev, "/dev/ttyACM0");
+    n.param("serial_dev", serial_dev, std::string("/dev/ttyACM0"));
     
     const std::string device = (argc>1) ? std::string(argv[1]) : serial_dev;
     const size_t baudrate = (argc>2) ? std::stoul(argv[2]) : 115200;
