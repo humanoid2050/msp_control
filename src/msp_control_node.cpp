@@ -237,6 +237,7 @@ int main(int argc, char **argv)
     ros::spin();
     std::cout << "LOOP FINISHED" <<std::endl;
     fcu->setRadioControlType(msp::RadioControlType::SERIAL);
+    fcu->disarm();
     fcu->stop();
     
 }
