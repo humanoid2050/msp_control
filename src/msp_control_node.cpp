@@ -143,7 +143,7 @@ private:
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "msp_control_node");
-    ros::NodeHandle n;
+    ros::NodeHandle n("~");
     
 	std::string serial_dev;
 
@@ -221,7 +221,7 @@ int main(int argc, char **argv)
     
     
     std::cout << "STARTED MSP NODE SPIN" << std::endl;
-    //fcu->printDebug();
+    fcu->setLoggingLevel(msp::LoggingLevel::INFO);
     
     ros::spin();
     std::cout << "LOOP FINISHED" <<std::endl;
