@@ -1,17 +1,17 @@
 <launch>
   
   <node name="joy_node" pkg="joy" type="joy_node" output="log" required="true">
-    <param name="deadzone" value=0.0/>
+    <param name="deadzone" value="0.0" />
     
-    <param name="throttle_channel" value=1/>
-    <param name="roll_channel" value=2/>
-    <param name="pitch_channel" value=3/>
-    <param name="yaw_channel" value=0/>
+    <param name="throttle_channel" value="1" />
+    <param name="roll_channel" value="2" />
+    <param name="pitch_channel" value="3" />
+    <param name="yaw_channel" value="0" />
     
-    <param name="arm_channel" value=1/>
-    <param name="disarm_channel" value=0/>
-    <param name="alt_hold_channel" value=4/>
-    <param name="no_alt_hold_channel" value=3/>
+    <param name="arm_channel" value="1" />
+    <param name="disarm_channel" value="0" />
+    <param name="alt_hold_channel" value="4" />
+    <param name="no_alt_hold_channel" value="3" />
   </node>
 
   <node name="msp_teleop_node" pkg="msp_control" type="msp_teleop" output="log" required="true"/>
