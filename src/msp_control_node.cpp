@@ -183,7 +183,7 @@ int main(int argc, char **argv)
             std::array<double,4> rpyt = {message.value[1],message.value[0],message.value[3],message.value[2]};
             fcu->setRPYT(rpyt);
         };
-    ros::Subscriber control_sub = n.subscribe<platform_control>("control", 1, setRcValues);
+    ros::Subscriber control_sub = n.subscribe<platform_control>("/control", 1, setRcValues);
     
     
     //handle flight mode messages
@@ -208,7 +208,7 @@ int main(int argc, char **argv)
             fcu->updateMspModes(add_modes, remove_modes);
             fcu->printActiveModes();
         };
-    ros::Subscriber flight_mode_sub = n.subscribe<FlightMode>("flight_mode", 1, setMode );
+    ros::Subscriber flight_mode_sub = n.subscribe<FlightMode>("/flight_mode", 1, setMode );
     
     
     //handle source selection messages
@@ -218,7 +218,7 @@ int main(int argc, char **argv)
             fcu->setRadioControlType( use_msp.value ? msp::RadioControlType::MSP : msp::RadioControlType::SERIAL ); 
 
         };
-    ros::Subscriber control_source_sub = n.subscribe<utilities::BoolStamped>("control_source", 10 , binarySetSource);
+    ros::Subscriber control_source_sub = n.subscribe<utilities::BoolStamped>("/control_source", 10 , binarySetSource);
     
     
     std::cout << "STARTED MSP NODE SPIN" << std::endl;
