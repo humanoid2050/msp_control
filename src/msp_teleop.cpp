@@ -46,7 +46,7 @@ public:
             flight_mode.remove.emplace_back(msp_control::FlightMode::NAVALTHOLD);
             flight_mode.remove.emplace_back(msp_control::FlightMode::SURFACE);
         }
-        if (!flight_mode.add.empty()  && !flight_mode.remove.empty())
+        if (!flight_mode.set.empty()  || !flight_mode.add.empty()  || !flight_mode.remove.empty())
             flight_mode_pub_.publish(flight_mode);
         
         
