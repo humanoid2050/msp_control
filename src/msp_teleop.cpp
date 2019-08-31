@@ -18,7 +18,6 @@ public:
     
     void interpretJoystick(const sensor_msgs::Joy& joyMsg)
     {
-        
         //send control message every iteration
         utilities::platform_control control;
         control.header = std_msgs::Header();
@@ -28,6 +27,7 @@ public:
         control.value[2] = invert_throttle_ ? -joyMsg.axes[throttle_channel_] : joyMsg.axes[throttle_channel_]; // thrust / z motion
         control.value[3] = invert_yaw_ ? -joyMsg.axes[yaw_channel_] : joyMsg.axes[yaw_channel_]; // yaw / z rotation
         command_pub_.publish(control);
+        
         
         msp_control::FlightMode flight_mode;
         flight_mode.header = std_msgs::Header();
@@ -46,10 +46,7 @@ public:
             flight_mode.add.emplace_back(msp_control::FlightMode::NAVALTHOLD);
             flight_mode.add.emplace_back(msp_control::FlightMode::SURFACE);
         }
-        
-        
         flight_mode_pub_.publish(flight_mode);
-        
         
         
         if (joyMsg.buttons[activate_channel_]) { 

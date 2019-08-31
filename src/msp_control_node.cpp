@@ -222,9 +222,10 @@ int main(int argc, char **argv)
     
     std::cout << "STARTED MSP NODE SPIN" << std::endl;
     fcu->setLoggingLevel(msp::LoggingLevel::INFO);
-    
+    fcu->setRadioControlType(msp::RadioControlType::MSP);
     ros::spin();
     std::cout << "LOOP FINISHED" <<std::endl;
+    fcu->setRadioControlType(msp::RadioControlType::SERIAL);
     fcu->stop();
     
 }
