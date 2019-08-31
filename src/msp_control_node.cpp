@@ -191,17 +191,23 @@ int main(int argc, char **argv)
         [&] (const FlightMode& flight_mode) {
             
             std::set<std::string> set_modes;
+            std::cout << "Set modes: " <<std::endl;
             for (const auto& mode : flight_mode.set) {
+                std::cout << " " << mode << " " << ModeMap.at(mode) << std::endl;
                 set_modes.emplace(ModeMap.at(mode));
             }
             fcu->setMspModes(set_modes);
             
             std::set<std::string> add_modes;
+            std::cout << "Add modes: " <<std::endl;
             for (const auto& mode : flight_mode.set) {
+                std::cout << " " << mode << " " << ModeMap.at(mode) << std::endl;
                 add_modes.emplace(ModeMap.at(mode));
             }
             std::set<std::string> remove_modes;
+            std::cout << "Remove modes: " <<std::endl;
             for (const auto& mode : flight_mode.set) {
+                std::cout << " " << mode << " " << ModeMap.at(mode) << std::endl;
                 remove_modes.emplace(ModeMap.at(mode));
             }
             

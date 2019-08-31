@@ -46,7 +46,8 @@ public:
             flight_mode.remove.emplace_back(msp_control::FlightMode::NAVALTHOLD);
             flight_mode.remove.emplace_back(msp_control::FlightMode::SURFACE);
         }
-        flight_mode_pub_.publish(flight_mode);
+        if (!flight_mode.add.empty()  && !flight_mode.remove.empty())
+            flight_mode_pub_.publish(flight_mode);
         
         
         if (joyMsg.buttons[activate_channel_]) { 
