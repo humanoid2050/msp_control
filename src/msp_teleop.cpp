@@ -29,40 +29,27 @@ public:
         control.value[3] = invert_yaw_ ? -joyMsg.axes[yaw_channel_] : joyMsg.axes[yaw_channel_]; // yaw / z rotation
         command_pub_.publish(control);
         
-        
-        //send flight mode if a button is pushed
-        if (joyMsg.buttons[arm_channel_] || joyMsg.buttons[disarm_channel_] || joyMsg.buttons[alt_hold_channel_] || joyMsg.buttons[no_alt_hold_channel_] ||
-            joyMsg.buttons[rth_channel_] || joyMsg.buttons[nav_hold_channel_] || joyMsg.buttons[angle_channel_])
-        {
-            //accumulate state since some has to be replicated 
-            if (joyMsg.buttons[arm_channel_]) { arm_ = true; }
-            if (joyMsg.buttons[disarm_channel_]) { arm_ = false; }
-            if (joyMsg.buttons[alt_hold_channel_]) { hold_altitude_ = true; }
-            if (joyMsg.buttons[no_alt_hold_channel_]) { hold_altitude_ = false; }
-            
-            if (joyMsg.buttons[rth_channel_]) { mode_ = RTH; }
-            if (joyMsg.buttons[nav_hold_channel_]) { mode_ = NAV_HOLD; }
-            if (joyMsg.buttons[angle_channel_]) { mode_ = ANGLE; }
-            
-            //configure flight mode (ANGLE/NAV_HOLD/RTH, ALT_HOLD, ARM)
-            msp_control::FlightMode flight_mode;
-            flight_mode.header = std_msgs::Header();
-            switch ( mode_) {
-            case ANGLE:
-                flight_mode.primary_mode = msp_control::FlightMode::ANGLE;
-                break;
-            case NAV_HOLD:
-                flight_mode.primary_mode = msp_control::FlightMode::NAV_POSHOLD;
-                break;
-            case RTH:
-                flight_mode.primary_mode = msp_control::FlightMode::NAV_RTH;
-                break;
-            }
-            if (hold_altitude_) flight_mode.secondary_mode |= msp_control::FlightMode::NAV_ALTHOLD;
-            if (arm_) flight_mode.modifier |= msp_control::FlightMode::ARM;
-            flight_mode_pub_.publish(flight_mode);
-            
+        msp_control::FlightMode flight_mode;
+        flight_mode.header = std_msgs::Header();
+        if (joyMsg.buttons[arm_channel_]) {
+            flight_mode.add.emplace_back(msp_control::FlightMode::ARM);
+            flight_mode.add.emplace_back(msp_control::FlightMode::ANGLE);
         }
+        if (joyMsg.buttons[disarm_channel_]) {
+            flight_mode.remove.emplace_back(msp_control::FlightMode::ARM);
+        }
+        if (joyMsg.buttons[alt_hold_channel_]) {
+            flight_mode.add.emplace_back(msp_control::FlightMode::NAVALTHOLD);
+            flight_mode.add.emplace_back(msp_control::FlightMode::SURFACE);
+        }
+        if (joyMsg.buttons[no_alt_hold_channel_]) {
+            flight_mode.add.emplace_back(msp_control::FlightMode::NAVALTHOLD);
+            flight_mode.add.emplace_back(msp_control::FlightMode::SURFACE);
+        }
+        
+        
+        flight_mode_pub_.publish(flight_mode);
+        
         
         
         if (joyMsg.buttons[activate_channel_]) { 

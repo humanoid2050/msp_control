@@ -2,6 +2,7 @@
 
 #include "ros/ros.h"
 
+#include "msp/FCFactory.hpp"
 #include "msp/FlightController.hpp"
 
 #include <sensor_msgs/Imu.h>
@@ -18,6 +19,7 @@
 #include "utilities/Float64Stamped.h"
 #include "utilities/BoolStamped.h"
 #include "msp_control/FlightMode.h"
+#include "msp_control/ModeMap.hpp"
 
 #include <iostream>
 #include <math.h>
@@ -39,7 +41,7 @@ public:
         nav_pub = node_.advertise<sensor_msgs::NavSatFix>("nav", 10);
     }
 
-    void onStatus(msp::msg::InavStatus& status) {
+    void onStatus(const msp::msg::InavStatus<>& status) {
         //std::cout << status;
         std::string arming_flags = msp::armingFlagToString(status.arming_flags());
         
@@ -50,14 +52,14 @@ public:
         
     }
     
-    void onRc(msp::msg::Rc& rc) {
+    void onRc(const msp::msg::Rc<>& rc) {
         //std::cout << rc;
     }
 
-    void onImu(msp::msg::RawImu& imu_raw) {
+    void onImu(const msp::msg::RawImu<>& imu_raw) {
         //std::cout<< imu_raw;
         
-        msp::msg::ScaledImu imu_scaled(imu_raw, 9.80665f/512.0, M_PIl/180.0/4.096, 0.92f/10.0f);
+        msp::msg::ImuSI<> imu_scaled(imu_raw, 512, M_PIl/180.0/4.096, 0.92f/10.0f, 9.80665f);
         
         sensor_msgs::Imu imu;
         imu.header = std_msgs::Header();
@@ -86,7 +88,7 @@ public:
 
     }
 
-    void onGps(msp::msg::RawGPS& gps_raw) {
+    void onGps(const msp::msg::RawGPS<>& gps_raw) {
         //std::cout<< gps_raw;  
         
         sensor_msgs::NavSatFix fix; 
@@ -101,21 +103,21 @@ public:
         nav_pub.publish(fix);
     }
     
-    void onCompGps(msp::msg::CompGPS& home_offset) {
+    void onCompGps(const msp::msg::CompGPS<>& home_offset) {
         //std::cout<< home_offset;
     }
     
-    void onGpsStatistics(msp::msg::GpsStatistics& gps_stats) {
+    void onGpsStatistics(const msp::msg::GpsStatistics<>& gps_stats) {
         //std::cout<< gps_stats;   
     }
     
 
-    void onAttitude(msp::msg::Attitude& attitude) {
+    void onAttitude(const msp::msg::Attitude<>& attitude) {
         //std::cout<<attitude;
         orientation_.setRPY((attitude.roll())*M_PIl/180.d, (attitude.pitch())*M_PIl/180.d, (attitude.yaw())*M_PIl/180.d);
     }
 
-    void onAltitude(msp::msg::Altitude& altitude) {
+    void onAltitude(const msp::msg::Altitude<>& altitude) {
         //std::cout<<altitude;
         
         utilities::Float64Stamped alt;
@@ -152,29 +154,28 @@ int main(int argc, char **argv)
     const std::string device = (argc>1) ? std::string(argv[1]) : serial_dev;
     const size_t baudrate = (argc>2) ? std::stoul(argv[2]) : 115200;
 
-    fcu::FlightController fcu(device, baudrate);
+    auto fcu = msp::FlightControllerFactory::create(device,baudrate);
     
-    fcu.connect();
+    fcu->start(device, baudrate);
     std::cout << "INITIALIZED" <<std::endl;
-    fcu.getControlSource();
 
     App app(n);
     
-    fcu.subscribe(&App::onStatus, &app, 0.5);
+    fcu->subscribe(&App::onStatus, &app, 0.5);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    fcu.subscribe(&App::onImu, &app, 0.1);
+    fcu->subscribe(&App::onImu, &app, 0.1);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    fcu.subscribe(&App::onGps, &app, 0.1);
+    fcu->subscribe(&App::onGps, &app, 0.1);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    //fcu.subscribe(&App::onCompGps, &app, 0.1);
+    //fcu->subscribe(&App::onCompGps, &app, 0.1);
     //std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    //fcu.subscribe(&App::onGpsStatistics, &app, 0.1);
+    //fcu->subscribe(&App::onGpsStatistics, &app, 0.1);
     //std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    fcu.subscribe(&App::onAttitude, &app, 0.1);
+    fcu->subscribe(&App::onAttitude, &app, 0.1);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    fcu.subscribe(&App::onAltitude, &app, 0.1);
+    fcu->subscribe(&App::onAltitude, &app, 0.1);
     //std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    //fcu.subscribe(&App::onRc, &app, 0.1);
+    //fcu->subscribe(&App::onRc, &app, 0.1);
     
     //handle control messages
     boost::function<void (const platform_control&)> setRcValues = 
@@ -182,7 +183,7 @@ int main(int argc, char **argv)
             if (message.commandType != platform_control::TYPE_QUAD_SIMPLE) return;
 
             std::array<double,4> rpyt = {message.value[1],message.value[0],message.value[3],message.value[2]};
-            fcu.setRPYT(rpyt);
+            fcu->setRPYT(rpyt);
         };
     ros::Subscriber control_sub = n.subscribe<platform_control>("control", 1, setRcValues);
     
@@ -190,12 +191,23 @@ int main(int argc, char **argv)
     //handle flight mode messages
     boost::function<void (const FlightMode&)> setMode =
         [&] (const FlightMode& flight_mode) {
-            fcu::FlightMode current_fm;
-            current_fm.primary = fcu::FlightMode::PRIMARY_MODE(flight_mode.primary_mode);
-            current_fm.secondary = fcu::FlightMode::SECONDARY_MODE(flight_mode.secondary_mode);
-            current_fm.modifier = fcu::FlightMode::MODIFIER(flight_mode.modifier);
-            fcu.setFlightMode(current_fm);
             
+            std::set<std::string> set_modes;
+            for (const auto& mode : flight_mode.set) {
+                set_modes.emplace(ModeMap.at(mode));
+            }
+            fcu->setMspModes(set_modes);
+            
+            std::set<std::string> add_modes;
+            for (const auto& mode : flight_mode.set) {
+                add_modes.emplace(ModeMap.at(mode));
+            }
+            std::set<std::string> remove_modes;
+            for (const auto& mode : flight_mode.set) {
+                remove_modes.emplace(ModeMap.at(mode));
+            }
+            
+            fcu->updateMspModes(add_modes, remove_modes);
         };
     ros::Subscriber flight_mode_sub = n.subscribe<FlightMode>("flight_mode", 1, setMode );
     
@@ -204,17 +216,17 @@ int main(int argc, char **argv)
     boost::function<void (const utilities::BoolStamped&)> binarySetSource =
         [&] (const utilities::BoolStamped& use_msp) { 
             
-            fcu.setControlSource( use_msp.value ? fcu::ControlSource::MSP : fcu::ControlSource::SBUS ); 
+            fcu->setRadioControlType( use_msp.value ? msp::RadioControlType::MSP : msp::RadioControlType::SERIAL ); 
 
         };
     ros::Subscriber control_source_sub = n.subscribe<utilities::BoolStamped>("control_source", 10 , binarySetSource);
     
     
     std::cout << "STARTED MSP NODE SPIN" << std::endl;
-    //fcu.printDebug();
+    //fcu->printDebug();
     
     ros::spin();
     std::cout << "LOOP FINISHED" <<std::endl;
-    fcu.disconnect();
+    fcu->stop();
     
 }
