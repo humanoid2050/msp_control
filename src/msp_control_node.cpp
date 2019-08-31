@@ -189,29 +189,33 @@ int main(int argc, char **argv)
     //handle flight mode messages
     boost::function<void (const FlightMode&)> setMode =
         [&] (const FlightMode& flight_mode) {
-            
-            std::set<std::string> set_modes;
-            std::cout << "Set modes: " <<std::endl;
-            for (const auto& mode : flight_mode.set) {
-                std::cout << " " << mode << " " << ModeMap.at(mode) << std::endl;
-                set_modes.emplace(ModeMap.at(mode));
-            }
-            fcu->setMspModes(set_modes);
-            
-            std::set<std::string> add_modes;
-            std::cout << "Add modes: " <<std::endl;
-            for (const auto& mode : flight_mode.add) {
-                std::cout << " " << mode << " " << ModeMap.at(mode) << std::endl;
-                add_modes.emplace(ModeMap.at(mode));
-            }
-            std::set<std::string> remove_modes;
-            std::cout << "Remove modes: " <<std::endl;
-            for (const auto& mode : flight_mode.remove) {
-                std::cout << " " << mode << " " << ModeMap.at(mode) << std::endl;
-                remove_modes.emplace(ModeMap.at(mode));
+            if (!flight_mode.set.empty()) {
+                                std::set<std::string> set_modes;
+                std::cout << "Set modes: " <<std::endl;
+                for (const auto& mode : flight_mode.set) {
+                    std::cout << " " << mode << " " << ModeMap.at(mode) << std::endl;
+                    set_modes.emplace(ModeMap.at(mode));
+                }
+                fcu->setMspModes(set_modes);
+
             }
             
-            fcu->updateMspModes(add_modes, remove_modes);
+            if (!flight_mode.add.empty() || !flight_mode.remove.empty()) {
+                std::set<std::string> add_modes;
+                std::cout << "Add modes: " <<std::endl;
+                for (const auto& mode : flight_mode.add) {
+                    std::cout << " " << mode << " " << ModeMap.at(mode) << std::endl;
+                    add_modes.emplace(ModeMap.at(mode));
+                }
+                std::set<std::string> remove_modes;
+                std::cout << "Remove modes: " <<std::endl;
+                for (const auto& mode : flight_mode.remove) {
+                    std::cout << " " << mode << " " << ModeMap.at(mode) << std::endl;
+                    remove_modes.emplace(ModeMap.at(mode));
+                }
+                
+                fcu->updateMspModes(add_modes, remove_modes);
+            }
             fcu->printActiveModes();
         };
     ros::Subscriber flight_mode_sub = n.subscribe<FlightMode>("/flight_mode", 1, setMode );
