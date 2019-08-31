@@ -145,8 +145,6 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "msp_control_node");
     ros::NodeHandle n;
     
-    
-
 	std::string serial_dev;
 
     n.param<std::string>("serial_dev", serial_dev, "/dev/ttyACM0");
