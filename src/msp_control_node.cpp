@@ -206,6 +206,7 @@ int main(int argc, char **argv)
             }
             
             fcu->updateMspModes(add_modes, remove_modes);
+            fcu->printActiveModes();
         };
     ros::Subscriber flight_mode_sub = n.subscribe<FlightMode>("flight_mode", 1, setMode );
     

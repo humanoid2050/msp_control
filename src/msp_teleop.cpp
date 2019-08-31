@@ -43,8 +43,8 @@ public:
             flight_mode.add.emplace_back(msp_control::FlightMode::SURFACE);
         }
         if (joyMsg.buttons[no_alt_hold_channel_]) {
-            flight_mode.add.emplace_back(msp_control::FlightMode::NAVALTHOLD);
-            flight_mode.add.emplace_back(msp_control::FlightMode::SURFACE);
+            flight_mode.remove.emplace_back(msp_control::FlightMode::NAVALTHOLD);
+            flight_mode.remove.emplace_back(msp_control::FlightMode::SURFACE);
         }
         flight_mode_pub_.publish(flight_mode);
         
