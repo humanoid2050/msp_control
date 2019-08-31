@@ -200,13 +200,13 @@ int main(int argc, char **argv)
             
             std::set<std::string> add_modes;
             std::cout << "Add modes: " <<std::endl;
-            for (const auto& mode : flight_mode.set) {
+            for (const auto& mode : flight_mode.add) {
                 std::cout << " " << mode << " " << ModeMap.at(mode) << std::endl;
                 add_modes.emplace(ModeMap.at(mode));
             }
             std::set<std::string> remove_modes;
             std::cout << "Remove modes: " <<std::endl;
-            for (const auto& mode : flight_mode.set) {
+            for (const auto& mode : flight_mode.remove) {
                 std::cout << " " << mode << " " << ModeMap.at(mode) << std::endl;
                 remove_modes.emplace(ModeMap.at(mode));
             }
