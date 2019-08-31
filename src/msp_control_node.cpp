@@ -190,10 +190,8 @@ int main(int argc, char **argv)
     boost::function<void (const FlightMode&)> setMode =
         [&] (const FlightMode& flight_mode) {
             if (!flight_mode.set.empty()) {
-                                std::set<std::string> set_modes;
-                std::cout << "Set modes: " <<std::endl;
+                std::set<std::string> set_modes;
                 for (const auto& mode : flight_mode.set) {
-                    std::cout << " " << mode << " " << ModeMap.at(mode) << std::endl;
                     set_modes.emplace(ModeMap.at(mode));
                 }
                 fcu->setMspModes(set_modes);
@@ -202,21 +200,17 @@ int main(int argc, char **argv)
             
             if (!flight_mode.add.empty() || !flight_mode.remove.empty()) {
                 std::set<std::string> add_modes;
-                std::cout << "Add modes: " <<std::endl;
                 for (const auto& mode : flight_mode.add) {
-                    std::cout << " " << mode << " " << ModeMap.at(mode) << std::endl;
                     add_modes.emplace(ModeMap.at(mode));
                 }
                 std::set<std::string> remove_modes;
-                std::cout << "Remove modes: " <<std::endl;
                 for (const auto& mode : flight_mode.remove) {
-                    std::cout << " " << mode << " " << ModeMap.at(mode) << std::endl;
                     remove_modes.emplace(ModeMap.at(mode));
                 }
                 
                 fcu->updateMspModes(add_modes, remove_modes);
             }
-            fcu->printActiveModes();
+            //fcu->printActiveModes();
         };
     ros::Subscriber flight_mode_sub = n.subscribe<FlightMode>("/flight_mode", 1, setMode );
     
