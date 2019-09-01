@@ -219,18 +219,18 @@ int main(int argc, char **argv)
     boost::function<void (const utilities::BoolStamped&)> binarySetSource =
         [&] (const utilities::BoolStamped& use_msp) { 
             
-            fcu->setRadioControlType( use_msp.value ? msp::RadioControlType::MSP : msp::RadioControlType::SERIAL ); 
+            fcu->setMspControlState( use_msp.value ? msp::ControlLevel::COMPLETE : msp::ControlLevel::NONE ); 
 
         };
     ros::Subscriber control_source_sub = n.subscribe<utilities::BoolStamped>("/control_source", 10 , binarySetSource);
     
     
     std::cout << "STARTED MSP NODE SPIN" << std::endl;
-    fcu->setLoggingLevel(msp::LoggingLevel::INFO);
-    fcu->setRadioControlType(msp::RadioControlType::MSP);
+    fcu->setLoggingLevel(msp::LoggingLevel::DEBUG);
+    fcu->setMspControlState(msp::ControlLevel::COMPLETE);
     ros::spin();
     std::cout << "LOOP FINISHED" <<std::endl;
-    fcu->setRadioControlType(msp::RadioControlType::SERIAL);
+    fcu->setMspControlState(msp::ControlLevel::NONE);
     fcu->disarm();
     fcu->stop();
     

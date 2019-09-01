@@ -7,8 +7,8 @@
 
   <node name="msp_teleop_node" pkg="msp_control" type="msp_teleop" output="log" required="true">
     <param name="throttle_channel" value="1" />
-    <param name="roll_channel" value="2" />
-    <param name="pitch_channel" value="3" />
+    <param name="roll_channel" value="3" />
+    <param name="pitch_channel" value="4" />
     <param name="yaw_channel" value="0" />
 
     <param name="arm_channel" value="1" />
@@ -20,7 +20,7 @@
   </node>
   
   <node name="msp_control_node" pkg="msp_control" type="msp_control_node" output="screen" required="true">
-    <param name="serial_dev" value="/dev/ttyS1"/>
+    <param name="serial_dev" value="/dev/ttyACM0"/>
   </node>
   
 </launch>
