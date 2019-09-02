@@ -47,6 +47,7 @@ public:
         
         if (arming_flags != arming_flags_) {
             arming_flags_ = arming_flags;
+            std::cout << "changed arming flags:" << std::endl;
             std::cout << arming_flags << std::endl;
         }
         
@@ -153,7 +154,7 @@ int main(int argc, char **argv)
     const size_t baudrate = (argc>2) ? std::stoul(argv[2]) : 115200;
 
     auto fcu = msp::FlightControllerFactory::create(device,baudrate);
-    
+
     fcu->start(device, baudrate);
     std::cout << "INITIALIZED" <<std::endl;
 
@@ -226,7 +227,7 @@ int main(int argc, char **argv)
     
     
     std::cout << "STARTED MSP NODE SPIN" << std::endl;
-    fcu->setLoggingLevel(msp::LoggingLevel::DEBUG);
+    fcu->setLoggingLevel(msp::LoggingLevel::INFO);
     fcu->setMspControlState(msp::ControlLevel::COMPLETE);
     ros::spin();
     std::cout << "LOOP FINISHED" <<std::endl;
