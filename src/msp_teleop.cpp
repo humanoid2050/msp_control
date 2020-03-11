@@ -2,15 +2,19 @@
 #include "ros/ros.h"
 
 #include "sensor_msgs/Joy.h"
-#include "utilities/platform_control.h"
-#include "utilities/BoolStamped.h"
+#include "hardware_abstraction/platform_control.h"
+#include "hardware_abstraction/control_spaces.hpp"
+#include "stamped_msgs/BoolStamped.h"
 #include "msp_control/FlightMode.h"
 
 #include <iostream>
 
+using hardware_abstraction::platform_control;
+
 class Teleop
 {
 public:
+    
     enum MODE {ANGLE, NAV_HOLD, RTH};
     
     Teleop() : arm_(false), hold_altitude_(false), mode_(ANGLE)
@@ -19,12 +23,16 @@ public:
     void interpretJoystick(const sensor_msgs::Joy& joyMsg)
     {
         //send control message every iteration
-        utilities::platform_control control;
+        platform_control control;
         control.header = std_msgs::Header();
-        control.commandType = utilities::platform_control::TYPE_QUAD_SIMPLE;
+        control.control_space = CONTROL_SPACE::COPTER;
+        control.control_type[0] = CONTROL_TYPE::FRACTIONAL_OUTPUT;
         control.value[0] = invert_pitch_ ? -joyMsg.axes[pitch_channel_] : joyMsg.axes[pitch_channel_]; // pitch / x motion
+        control.control_type[1] = CONTROL_TYPE::FRACTIONAL_OUTPUT;
         control.value[1] = invert_roll_ ? -joyMsg.axes[roll_channel_] : joyMsg.axes[roll_channel_]; // roll / y motion 
+        control.control_type[2] = CONTROL_TYPE::FRACTIONAL_OUTPUT;
         control.value[2] = invert_throttle_ ? -joyMsg.axes[throttle_channel_] : joyMsg.axes[throttle_channel_]; // thrust / z motion
+        control.control_type[3] = CONTROL_TYPE::FRACTIONAL_OUTPUT;
         control.value[3] = invert_yaw_ ? -joyMsg.axes[yaw_channel_] : joyMsg.axes[yaw_channel_]; // yaw / z rotation
         command_pub_.publish(control);
         
@@ -51,13 +59,13 @@ public:
         
         
         if (joyMsg.buttons[activate_channel_]) { 
-            utilities::BoolStamped msp_control;
+            stamped_msgs::BoolStamped msp_control;
             msp_control.header = std_msgs::Header();
             msp_control.value = true;
             control_source_pub_.publish(msp_control);
         }
         if (joyMsg.buttons[deactivate_channel_]) { 
-            utilities::BoolStamped msp_control;
+            stamped_msgs::BoolStamped msp_control;
             msp_control.header = std_msgs::Header();
             msp_control.value = false;
             control_source_pub_.publish(msp_control);
@@ -134,9 +142,9 @@ int main(int argc, char **argv)
     n.param("invert_yaw", teleop.invert_yaw_, false);
     
     
-    teleop.command_pub_ = n.advertise<utilities::platform_control>("/control",10);
+    teleop.command_pub_ = n.advertise<platform_control>("/control",10);
     teleop.flight_mode_pub_ = n.advertise<msp_control::FlightMode>("/flight_mode",10);
-    teleop.control_source_pub_ = n.advertise<utilities::BoolStamped>("/control_source",10);
+    teleop.control_source_pub_ = n.advertise<stamped_msgs::BoolStamped>("/control_source",10);
     
     ros::Subscriber joy_event = n.subscribe("/joy", 5, &Teleop::interpretJoystick, &teleop);
 

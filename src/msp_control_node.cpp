@@ -15,9 +15,10 @@
 
 #include <tf2/LinearMath/Quaternion.h>
 
-#include "utilities/platform_control.h"
-#include "utilities/Float64Stamped.h"
-#include "utilities/BoolStamped.h"
+#include "hardware_abstraction/platform_control.h"
+#include "hardware_abstraction/control_spaces.hpp"
+#include "stamped_msgs/Float64Stamped.h"
+#include "stamped_msgs/BoolStamped.h"
 #include "msp_control/FlightMode.h"
 #include "msp_control/ModeMap.hpp"
 
@@ -28,7 +29,7 @@
 
 
 using msp_control::FlightMode;
-using utilities::platform_control;
+using hardware_abstraction::platform_control;
 
 class App {
 public:
@@ -37,7 +38,7 @@ public:
     {
         imu_pub = node_.advertise<sensor_msgs::Imu>("imu", 10);
         mag_pub = node_.advertise<sensor_msgs::MagneticField>("mag", 10);
-        alt_pub = node_.advertise<utilities::Float64Stamped>("altitude", 10);
+        alt_pub = node_.advertise<stamped_msgs::Float64Stamped>("altitude", 10);
         nav_pub = node_.advertise<sensor_msgs::NavSatFix>("nav", 10);
     }
 
@@ -121,7 +122,7 @@ public:
     void onAltitude(const msp::msg::Altitude<>& altitude) {
         //std::cout<<altitude;
         
-        utilities::Float64Stamped alt;
+        stamped_msgs::Float64Stamped alt;
         alt.header = std_msgs::Header();
         alt.value = altitude.altitude();
         alt_pub.publish(alt);
@@ -179,7 +180,7 @@ int main(int argc, char **argv)
     //handle control messages
     boost::function<void (const platform_control&)> setRcValues = 
         [&] (const platform_control& message) { 
-            if (message.commandType != platform_control::TYPE_QUAD_SIMPLE) return;
+            if (message.control_space != CONTROL_SPACE::COPTER) return;
 
             std::array<double,4> rpyt = {message.value[1],message.value[0],message.value[3],message.value[2]};
             fcu->setRPYT(rpyt);
@@ -217,13 +218,13 @@ int main(int argc, char **argv)
     
     
     //handle source selection messages
-    boost::function<void (const utilities::BoolStamped&)> binarySetSource =
-        [&] (const utilities::BoolStamped& use_msp) { 
+    boost::function<void (const stamped_msgs::BoolStamped&)> binarySetSource =
+        [&] (const stamped_msgs::BoolStamped& use_msp) { 
             
             fcu->setMspControlState( use_msp.value ? msp::ControlLevel::COMPLETE : msp::ControlLevel::NONE ); 
 
         };
-    ros::Subscriber control_source_sub = n.subscribe<utilities::BoolStamped>("/control_source", 10 , binarySetSource);
+    ros::Subscriber control_source_sub = n.subscribe<stamped_msgs::BoolStamped>("/control_source", 10 , binarySetSource);
     
     
     std::cout << "STARTED MSP NODE SPIN" << std::endl;
